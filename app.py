@@ -1,6 +1,5 @@
 from flask import Flask, render_template
 from flask_cors import CORS
-from pymongo import MongoClient
 from config import Config
 
 def create_app():
@@ -8,8 +7,9 @@ def create_app():
     app.config.from_object(Config)
     CORS(app)
 
-    client = MongoClient(app.config["MONGO_URI"])
-    app.db = client.get_default_database()
+    import mongomock
+    client = mongomock.MongoClient()
+    app.db = client["delivery_app"]
 
     from api.routes_api import routes_bp
     from api.stops_api import stops_bp
