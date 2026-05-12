@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Route Detail — DeliveryOpt{% endblock %}
+{% block page_title %}<span id="routeNameHeader">Loading…</span>{% endblock %}
+
+{% block topbar_actions %}
+<div class="d-flex gap-2" id="routeActions" style="display:none!important">
+  <button class="btn btn-sm btn-outline-secondary" id="btnEditRoute">
+    <i class="bi bi-pencil me-1"></i>Edit
+  </button>
+  <button class="btn btn-sm btn-warning" id="btnOptimize">
+    <i class="bi bi-magic me-1"></i>Optimize
+  </button>
+  <div class="dropdown">
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+      Status
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      <li><a class="dropdown-item" href="#" data-status="pending">Pending</a></li>
+      <li><a class="dropdown-item" href="#" data-status="active">Active</a></li>
+      <li><a class="dropdown-item" href="#" data-status="completed">Completed</a></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+  #map { height: 100%; min-height: 400px; }
+  .stop-card { cursor: grab; }
+  .stop-card.dragging { opacity: 0.5; }
+  .stop-card.drag-over { border-top: 3px solid #ffc107; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3 h-100">
+  <!-- Left panel: stops -->
+  <div class="col-lg-5 d-flex flex-column gap-3">
+    <!-- Route info bar -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-body py-2 px-3 d-flex align-items-center gap-3">
+        <span class="badge bg-secondary" id="routeStatusBadge">—</span>
+        <span class="text-muted small"><i class="bi bi-rulers me-1"></i><span id="routeDistance">—</span></span>
+        <span class="text-muted small"><i class="bi bi-geo-alt me-1"></i><span id="routeStopCount">0</span> stops</span>
+        <span class="ms-auto text-muted small" id="routeOptimizedLabel"></span>
+      </div>
+    </div>
+
+    <!-- Add stop form -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-2 fw-semibold d-flex justify-content-between align-items-center">
+        Add Stop
+        <button class="btn btn-sm btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#addStopCollapse">
+          <i class="bi bi-chevron-down"></i>
+        </button>
+      </div>
+      <div class="collapse show" id="addStopCollapse">
+        <div class="card-body">
+          <form id="addStopForm">
+            <div class="mb-2">
+              <input type="text" class="form-control form-control-sm" name="address"
+                placeholder="Address *" required>
+            </div>
+            <div class="row g-2 mb-2">
+              <div class="col">
+                <input type="text" class="form-control form-control-sm" name="contact_name" placeholder="Contact name">
+              </div>
+              <div class="col">
+                <input type="text" class="form-control form-control-sm" name="contact_phone" placeholder="Phone">
+              </div>
+            </div>
+            <div class="mb-2">
+              <textarea class="form-control form-control-sm" name="notes" rows="1" placeholder="Notes"></textarea>
+            </div>
+            <button type="submit" class="btn btn-sm btn-warning w-100">
+              <i class="bi bi-plus-lg me-1"></i>Add Stop
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stops list -->
+    <div class="card border-0 shadow-sm flex-grow-1 overflow-auto">
+      <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Stops</span>
+        <small class="text-muted">Drag to reorder</small>
+      </div>
+      <div class="card-body p-2" id="stopsList">
+        <div class="text-center text-muted py-4">
+          <div class="spinner-border spinner-border-sm text-warning"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right panel: map -->
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm h-100" style="min-height:500px">
+      <div id="map"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Route Modal -->
+<div class="modal fade" id="editRouteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Route</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="editRouteForm">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-medium">Route Name</label>
+            <input type="text" class="form-control" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-medium">Driver</label>
+            <select class="form-select" name="driver_id" id="editDriverSelect">
+              <option value="">— Unassigned —</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-medium">Notes</label>
+            <textarea class="form-control" name="notes" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Stop detail modal -->
+<div class="modal fade" id="stopDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Stop Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="stopDetailBody">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-success" id="stopMarkComplete">
+          <i class="bi bi-check-lg me-1"></i>Mark Complete
+        </button>
+        <button type="button" class="btn btn-sm btn-danger" id="stopMarkFailed">
+          <i class="bi bi-x-lg me-1"></i>Mark Failed
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const ROUTE_ID = "{{ route_id }}";
+  const GOOGLE_MAPS_KEY = "{{ google_maps_key }}";
+</script>
+{% if google_maps_key %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_key }}&callback=initMap&libraries=geometry" async defer></script>
+{% endif %}
+<script src="{{ url_for('static', filename='js/route_detail.js') }}"></script>
+{% endblock %}

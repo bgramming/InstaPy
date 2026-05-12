@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Drivers — DeliveryOpt{% endblock %}
+{% block page_title %}Drivers{% endblock %}
+
+{% block topbar_actions %}
+<button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#newDriverModal">
+  <i class="bi bi-plus-lg me-1"></i>Add Driver
+</button>
+{% endblock %}
+
+{% block content %}
+<div id="drivers-container">
+  <div class="text-center text-muted py-5">
+    <div class="spinner-border text-warning" role="status"></div>
+  </div>
+</div>
+
+<!-- New Driver Modal -->
+<div class="modal fade" id="newDriverModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Driver</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="newDriverForm">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-medium">Full Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="name" required>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col">
+              <label class="form-label fw-medium">Phone</label>
+              <input type="tel" class="form-control" name="phone">
+            </div>
+            <div class="col">
+              <label class="form-label fw-medium">Email</label>
+              <input type="email" class="form-control" name="email">
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col">
+              <label class="form-label fw-medium">Vehicle Type</label>
+              <input type="text" class="form-control" name="vehicle" placeholder="e.g. Van, Truck">
+            </div>
+            <div class="col">
+              <label class="form-label fw-medium">Plate Number</label>
+              <input type="text" class="form-control" name="vehicle_plate">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-medium">Notes</label>
+            <textarea class="form-control" name="notes" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning">Add Driver</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Driver Modal -->
+<div class="modal fade" id="editDriverModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Driver</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="editDriverForm">
+        <input type="hidden" name="driver_id">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-medium">Full Name</label>
+            <input type="text" class="form-control" name="name" required>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col">
+              <label class="form-label fw-medium">Phone</label>
+              <input type="tel" class="form-control" name="phone">
+            </div>
+            <div class="col">
+              <label class="form-label fw-medium">Email</label>
+              <input type="email" class="form-control" name="email">
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col">
+              <label class="form-label fw-medium">Vehicle Type</label>
+              <input type="text" class="form-control" name="vehicle">
+            </div>
+            <div class="col">
+              <label class="form-label fw-medium">Plate Number</label>
+              <input type="text" class="form-control" name="vehicle_plate">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-medium">Notes</label>
+            <textarea class="form-control" name="notes" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger me-auto" id="deactivateDriverBtn">Deactivate</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Driver card template -->
+<template id="driverCardTemplate">
+  <div class="col-sm-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="d-flex align-items-center gap-2">
+            <div class="avatar bg-warning-subtle rounded-circle d-flex align-items-center justify-content-center"
+                style="width:40px;height:40px">
+              <i class="bi bi-person-fill text-warning"></i>
+            </div>
+            <div>
+              <div class="fw-semibold driver-name"></div>
+              <small class="text-muted driver-vehicle"></small>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary driver-edit-btn">
+            <i class="bi bi-pencil"></i>
+          </button>
+        </div>
+        <div class="small text-muted mt-2">
+          <div class="driver-phone"></div>
+          <div class="driver-email"></div>
+          <div class="driver-plate"></div>
+        </div>
+        <div class="mt-2 pt-2 border-top">
+          <small class="text-muted"><i class="bi bi-map me-1"></i><span class="driver-routes">—</span> routes assigned</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/drivers.js') }}"></script>
+{% endblock %}
